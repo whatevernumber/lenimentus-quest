@@ -1,0 +1,20 @@
+{
+    "require": {
+        "leafs/leaf": "*",
+        "laudis/neo4j-php-client": "^3.1",
+        "vlucas/phpdotenv": "^5.6",
+        "leafs/auth": "^2.4",
+        "leafs/cors": "^1.2"
+    },
+    "autoload": {
+        "psr-4": {
+            "Services\\": "services/",
+            "Classes\\": "classes/"
+        }
+    },
+    "config": {
+        "allow-plugins": {
+            "php-http/discovery": true
+        }
+    }
+}
