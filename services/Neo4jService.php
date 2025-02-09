@@ -111,6 +111,11 @@ class Neo4jService
      */
     public function getStageOptions(string $stage): array
     {
-        return $this->client->run("MATCH (ee:TextStage {stage: '" . $stage ."'})-[:OPTION]->(quest) RETURN quest.action")->toArray();
+        return $this->client->run("MATCH (ee:TextStage {stage: '" . $stage ."'})-[:OPTION]->(quest) 
+        OPTIONAL MATCH (quest)-[:ACTION]->(ss:TextStage)
+        OPTIONAL MATCH (quest)-[:ACTION_A]->(a:TextStage)
+        OPTIONAL MATCH (quest)-[:ACTION_B]->(b:TextStage)
+        RETURN quest.action, ss.stage, a.stage, b.stage")
+        ->toArray();
     }
 }
