@@ -10,10 +10,13 @@ class Stage
         '3.2.1' => self::ROOF_AVAILABLE_REQUIRED_LEVEL,
         '3.2.2' => self::ROOF_AVAILABLE_REQUIRED_LEVEL,
         '3.3' => self::ROOF_AVAILABLE_REQUIRED_LEVEL,
+        self::BEFORE_JENNY_STAGE => self::JENNY_NEWS_STAGE
     ];
 
     const WINDOW_AVAILABLE_REQUIRED_LEVEL = '1.2';
     const ROOF_AVAILABLE_REQUIRED_LEVEL = '1.3';
+    const JENNY_NEWS_STAGE = '2.1.1';
+    const BEFORE_JENNY_STAGE = '6';
 
     const LADDER_CHOICES_LEVEL = ['3.2.1', '3.2.2', '3.3'];
     const WINDOW_CHOICES_LEVELS = ['3.1.1', '3.1.2'];
@@ -21,6 +24,7 @@ class Stage
     const STAGE_ROOF_ACTION = 'Подняться на крышу';
     const STAGE_WAIT_ACTION = 'Ждать';
 
+    const STAGE_ASK_ACTION = '«Извините, вы мне кого-то напоминаете…»';
     const ACTION_RELATION_STRING = 'ACTION';
 
     /**
@@ -59,6 +63,14 @@ class Stage
         if (in_array($userStage, Stage::LADDER_CHOICES_LEVEL) && !empty($options) && !self::selectRoute($visitedStages, $userStage)) {
             $options = array_filter($options, function ($option) {
                 return $option['quest.action'] !== Stage::STAGE_ROOF_ACTION;
+            });
+
+            $options = array_values($options);
+        }
+
+        if ($userStage === Stage::BEFORE_JENNY_STAGE && !empty($options) && !self::selectRoute($visitedStages, $userStage)) {
+            $options = array_filter($options, function ($option) {
+                return $option['quest.action'] !== Stage::STAGE_ASK_ACTION;
             });
 
             $options = array_values($options);
