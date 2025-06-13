@@ -93,7 +93,7 @@ class Neo4jService
      */
     public function getStageByAction(string $action, string $relation): array
     {
-        return $this->client->run("MATCH (quest:TextStage)<-[:" . $relation . "]-(a:ActionButton {action:'" . $action . "'}) RETURN quest.stage, quest.text")->toArray();
+        return $this->client->run("MATCH (quest:TextStage)<-[:" . $relation . "]-(a:ActionButton {action:'" . $action . "'}) RETURN quest.stage, quest.text, quest.text_en")->toArray();
     }
 
     /**
@@ -102,7 +102,7 @@ class Neo4jService
      */
     public function getStage(string $stage): array
     {
-        return $this->client->run("MATCH (quest:TextStage {stage: '" . $stage . "'}) RETURN quest.stage, quest.text")->toArray();
+        return $this->client->run("MATCH (quest:TextStage {stage: '" . $stage . "'}) RETURN quest.stage, quest.text, quest.text_en")->toArray();
     }
 
     /**
@@ -115,7 +115,51 @@ class Neo4jService
         OPTIONAL MATCH (quest)-[:ACTION]->(ss:TextStage)
         OPTIONAL MATCH (quest)-[:ACTION_A]->(a:TextStage)
         OPTIONAL MATCH (quest)-[:ACTION_B]->(b:TextStage)
-        RETURN quest.action, ss.stage, a.stage, b.stage")
+        RETURN quest.action, quest.action_en, ss.stage, a.stage, b.stage")
         ->toArray();
+    }
+
+    /**
+     * @param string $stage
+     * @param string $text
+     * @return mixed
+     */
+    public function updateStageText(string $stage, string $text, string $lang = 'ru'): array
+    {
+        $flag = 'text';
+
+        if ($lang !== 'ru') {
+            $flag .= '_' . $lang;
+        }
+
+        return $this->client->run("MATCH (ee:TextStage {stage: '" . $stage ."'})
+            SET ee." . $flag . " = '" . $text . "'
+            RETURN ee")->toArray();
+    }
+
+    /**
+     * @param string $stage
+     * @param string $action
+     * @param string $newAction
+     * @return mixed
+     */
+    public function updateAction(string $stage, string $action, string $newAction, string $lang = 'ru'): array
+    {
+        $flag = 'action';
+
+        if ($lang !== 'ru') {
+            $flag .= '_' . $lang;
+        }
+
+        return $this->client->run("MATCH (ee:TextStage)-[:OPTION]->(b:ActionButton) 
+            WHERE ee.stage='" . $stage . "' and b.action = '" . $action . "' 
+            SET b." . $flag . " = '" . $newAction . "'
+            RETURN ee")->toArray();
+    }
+
+    public function getTextStages()
+    {
+        return $this->client->run("MATCH (ee:TextStage) RETURN ee")
+            ->toArray();
     }
 }
