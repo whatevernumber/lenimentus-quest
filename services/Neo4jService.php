@@ -60,13 +60,13 @@ class Neo4jService
     public function createOptionButtonWithLinkToTextStage(string $stage, string $action): void
     {
         $this->client->run('
-                    MATCH (ts:TextStage) WHERE ts.stage=$stage
-                    CREATE (ab:ActionButton {action: $action})
-                    CREATE (ts)-[:OPTION]->(ab)',
-                    [
-                        'stage' => $stage,
-                        'action' => $action,
-                    ]);
+                MATCH (ts:TextStage) WHERE ts.stage=$stage
+                CREATE (ab:ActionButton {action: $action})
+                CREATE (ts)-[:OPTION]->(ab)',
+                [
+                    'stage' => $stage,
+                    'action' => $action,
+                ]);
     }
 
     /**
