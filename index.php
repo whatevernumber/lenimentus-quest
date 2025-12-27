@@ -14,11 +14,4 @@ app()->cors([
 
 app()->post('/api/quest', 'App\Controllers\StageController@processAction');
 
-
-    $service = new Neo4jService();
-
-
-
-});
-
 app()->run();
