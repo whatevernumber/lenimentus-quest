@@ -8,5 +8,5 @@ interface DBClient
 
     public function getClient(): mixed;
 
-    public function runQuery(string $query, array $data): mixed;
+    public function runQuery(string $query, array $data): array;
 }
