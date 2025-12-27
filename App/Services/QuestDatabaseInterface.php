@@ -9,35 +9,35 @@ interface QuestDatabaseInterface
      * @param string $text
      * @return mixed
      */
-    public function createTextStage(string $stage, string $text): mixed;
+    public function createTextStage(string $stage, string $text): array;
 
     /**
      * @param string $stage
      * @param string $action
      * @return mixed
      */
-    public function createOptionButtonWithLinkToTextStage(string $stage, string $action): mixed;
+    public function createOptionButtonWithLinkToTextStage(string $stage, string $action): array;
 
     /**
      * @param string $stage
      * @param string $action
      * @return mixed
      */
-    public function linkOptionButton(string $stage, string $action): mixed;
+    public function linkOptionButton(string $stage, string $action): array;
 
     /**
      * @param string $stage
      * @param string $action
      * @return mixed
      */
-    public function linkActionButton(string $stage, string $action): mixed;
+    public function linkActionButton(string $stage, string $action): array;
 
     /**
      * @param string $action
      * @param string $relation
      * @return mixed
      */
-    public function getStageByAction(string $action, string $relation): mixed;
+    public function getStageByAction(string $action, string $relation): array;
 
     /**
      * @param string $stage

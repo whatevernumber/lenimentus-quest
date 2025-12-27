@@ -17,9 +17,9 @@ class Neo4jService implements QuestDatabaseInterface
     /**
      * @param string $stage
      * @param string $text
-     * @return mixed
+     * @return array
      */
-    public function createTextStage(string $stage, string $text): mixed
+    public function createTextStage(string $stage, string $text): array
     {
         return $this->client->runQuery('CREATE (ts:TextStage {stage: $stage, text: $text})',
             [
@@ -31,9 +31,9 @@ class Neo4jService implements QuestDatabaseInterface
     /**
      * @param string $stage
      * @param string $action
-     * @return mixed
+     * @return array
      */
-    public function createOptionButtonWithLinkToTextStage(string $stage, string $action): mixed
+    public function createOptionButtonWithLinkToTextStage(string $stage, string $action): array
     {
         return $this->client->runQuery('
                 MATCH (ts:TextStage) WHERE ts.stage=$stage
@@ -48,9 +48,9 @@ class Neo4jService implements QuestDatabaseInterface
     /**
      * @param string $stage
      * @param string $action
-     * @return mixed
+     * @return array
      */
-    public function linkOptionButton(string $stage, string $action): mixed
+    public function linkOptionButton(string $stage, string $action): array
     {
         return $this->client->runQuery('
                 MATCH (ts:TextStage) WHERE ts.stage= $stage
@@ -65,9 +65,9 @@ class Neo4jService implements QuestDatabaseInterface
     /**
      * @param string $stage
      * @param string $action
-     * @return mixed
+     * @return array
      */
-    public function linkActionButton(string $stage, string $action): mixed
+    public function linkActionButton(string $stage, string $action): array
     {
         return $this->client->runQuery('
                 MATCH (ts:TextStage) WHERE ts.stage= $stage
