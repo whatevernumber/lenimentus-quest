@@ -32,10 +32,10 @@ class Neo4jService
         $credits = $this->user . ':' . $this->password;
 
         $this->client = ClientBuilder::create()->withDriver('bolt', 'bolt://' . $credits . '@' . $this->dbUrl) // creates a bolt driver
-        ->withDriver('http', 'http://' . $this->dbUrl, Authenticate::basic('neo4j', $this->password)) // creates an http driver
-        ->withDriver('neo4j', 'neo4j://neo4j.test.com?database=' . $this->db, Authenticate::oidc('token')) // creates an auto routed driver with an OpenID Connect token
-        ->withDefaultDriver('bolt')
-        ->build();
+            ->withDriver('http', 'http://' . $this->dbUrl, Authenticate::basic('neo4j', $this->password)) // creates an http driver
+            ->withDriver('neo4j', 'neo4j://neo4j.test.com?database=' . $this->db, Authenticate::oidc('token')) // creates an auto routed driver with an OpenID Connect token
+            ->withDefaultDriver('bolt')
+            ->build();
     }
 
     /**
@@ -45,7 +45,11 @@ class Neo4jService
      */
     public function createTextStage(string $stage, string $text): void
     {
-        $this->client->run("CREATE (ts:TextStage {stage:'" . $stage . "', text: '" . $text . "'})");
+        $this->client->run('CREATE (ts:TextStage {stage: $stage, text: $text})',
+            [
+                'stage' => $stage,
+                'text' => $text,
+            ]);
     }
 
     /**
@@ -53,12 +57,16 @@ class Neo4jService
      * @param string $action
      * @return void
      */
-    public function createAndLinkOptionButton(string $stage, string $action): void
+    public function createOptionButtonWithLinkToTextStage(string $stage, string $action): void
     {
-        $this->client->run("
-                    MATCH (ts:TextStage) WHERE ts.stage='" . $stage . "'
-                    CREATE (ab:ActionButton {action: '" . $action . "'})
-                    CREATE (ts)-[:OPTION]->(ab)");
+        $this->client->run('
+                    MATCH (ts:TextStage) WHERE ts.stage=$stage
+                    CREATE (ab:ActionButton {action: $action})
+                    CREATE (ts)-[:OPTION]->(ab)',
+                    [
+                        'stage' => $stage,
+                        'action' => $action,
+                    ]);
     }
 
     /**
@@ -68,10 +76,14 @@ class Neo4jService
      */
     public function linkOptionButton(string $stage, string $action): void
     {
-        $this->client->run("
-                MATCH (ts:TextStage) WHERE ts.stage='" . $stage . "'
-                MATCH (ab:ActionButton) WHERE ab.action='" . $action . "'
-                CREATE (ts)-[:OPTION]->(ab)");
+        $this->client->run('
+                MATCH (ts:TextStage) WHERE ts.stage= $stage
+                MATCH (ab:ActionButton) WHERE ab.action= $action
+                CREATE (ts)-[:OPTION]->(ab)',
+            [
+                'stage' => $stage,
+                'action' => $action,
+            ]);
     }
 
     /**
@@ -81,11 +93,14 @@ class Neo4jService
      */
     public function linkActionButton(string $stage, string $action): void
     {
-        $this->client->run("
-                MATCH (ts:TextStage) WHERE ts.stage='" . $stage . "'
-                MATCH (ab:ActionButton) WHERE ab.action='" . $action ."'
-                CREATE (ab)-[:ACTION]->(ts)
-        ");
+        $this->client->run('
+                MATCH (ts:TextStage) WHERE ts.stage= $stage
+                MATCH (ab:ActionButton) WHERE ab.action= $action
+                CREATE (ab)-[:ACTION]->(ts)',
+            [
+                'stage' => $stage,
+                'action' => $action,
+            ]);
     }
 
     /**
@@ -95,7 +110,15 @@ class Neo4jService
      */
     public function getStageByAction(string $action, string $relation): array
     {
-        return $this->client->run("MATCH (quest:TextStage)<-[:" . $relation . "]-(a:ActionButton {action:'" . $action . "'}) RETURN quest.stage, quest.text, quest.text_en")->toArray();
+        if (!in_array($relation, ['ACTION', 'ACTION_A', 'ACTION_B'])) {
+            return [];
+        }
+
+        return $this->client->run("MATCH (quest:TextStage)<-[:$relation]-(a:ActionButton {action: \$action}) RETURN quest.stage, quest.text, quest.text_en",
+            [
+                'action' => $action,
+            ])
+            ->toArray();
     }
 
     /**
@@ -104,7 +127,11 @@ class Neo4jService
      */
     public function getStage(string $stage): array
     {
-        return $this->client->run("MATCH (quest:TextStage {stage: '" . $stage . "'}) RETURN quest.stage, quest.text, quest.text_en")->toArray();
+        return $this->client->run('MATCH (quest:TextStage {stage: $stage}) RETURN quest.stage, quest.text, quest.text_en',
+            [
+                'stage' => $stage,
+            ])
+        ->toArray();
     }
 
     /**
@@ -113,18 +140,21 @@ class Neo4jService
      */
     public function getStageOptions(string $stage): array
     {
-        return $this->client->run("MATCH (ee:TextStage {stage: '" . $stage ."'})-[:OPTION]->(quest) 
-        OPTIONAL MATCH (quest)-[:ACTION]->(ss:TextStage)
-        OPTIONAL MATCH (quest)-[:ACTION_A]->(a:TextStage)
-        OPTIONAL MATCH (quest)-[:ACTION_B]->(b:TextStage)
-        RETURN quest.action, quest.action_en, ss.stage, a.stage, b.stage")
-        ->toArray();
+        return $this->client->run('MATCH (ee:TextStage {stage: $stage})-[:OPTION]->(quest) 
+            OPTIONAL MATCH (quest)-[:ACTION]->(ss:TextStage)
+            OPTIONAL MATCH (quest)-[:ACTION_A]->(a:TextStage)
+            OPTIONAL MATCH (quest)-[:ACTION_B]->(b:TextStage)
+            RETURN quest.action, quest.action_en, ss.stage, a.stage, b.stage',
+            [
+                'stage' => $stage,
+            ])
+            ->toArray();
     }
 
     /**
      * @param string $stage
      * @param string $text
-     * @return mixed
+     * @return array
      */
     public function updateStageText(string $stage, string $text, string $lang = 'ru'): array
     {
@@ -134,16 +164,25 @@ class Neo4jService
             $flag .= '_' . $lang;
         }
 
-        return $this->client->run("MATCH (ee:TextStage {stage: '" . $stage ."'})
-            SET ee." . $flag . " = '" . $text . "'
-            RETURN ee")->toArray();
+        if (!in_array($flag, ['text', 'text_en'])) {
+            return [];
+        }
+
+        return $this->client->run('MATCH (ee:TextStage {stage: $stage})
+            SET ee += $patch
+            RETURN ee',
+            [
+                'stage' => $stage,
+                'patch' => [$flag => $text],
+            ])
+            ->toArray();
     }
 
     /**
      * @param string $stage
      * @param string $action
      * @param string $newAction
-     * @return mixed
+     * @return array
      */
     public function updateAction(string $stage, string $action, string $newAction, string $lang = 'ru'): array
     {
@@ -153,10 +192,20 @@ class Neo4jService
             $flag .= '_' . $lang;
         }
 
-        return $this->client->run("MATCH (ee:TextStage)-[:OPTION]->(b:ActionButton) 
-            WHERE ee.stage='" . $stage . "' and b.action = '" . $action . "' 
-            SET b." . $flag . " = '" . $newAction . "'
-            RETURN ee")->toArray();
+        if (!in_array($flag, ['action', 'action_en'])) {
+            return [];
+        }
+
+        return $this->client->run('MATCH (ee:TextStage)-[:OPTION]->(b:ActionButton) 
+            WHERE ee.stage= $stage and b.action = $action 
+            SET b += $patch
+            RETURN ee',
+            [
+                'stage' => $stage,
+                'action' => $action,
+                'patch' => [$flag => $newAction],
+            ])
+            ->toArray();
     }
 
     public function getTextStages()
