@@ -38,14 +38,6 @@ class Neo4jClient implements DBClient
     }
 
     /**
-     * @return ClientInterface
-     */
-    public function getClient(): ClientInterface
-    {
-        return $this->client;
-    }
-
-    /**
      * @param string $query
      * @param array $data
      * @return array
