@@ -1,7 +1,5 @@
 <?php
 
-use Classes\Stage;
-use Services\Neo4jService;
 
 require __DIR__ . '/vendor/autoload.php';
 
@@ -13,7 +11,7 @@ app()->cors([
     'methods' => ['GET', 'POST'],
 ]);
 
-app()->post('/api/quest', function () {
+app()->post('/api/quest', 'App\Controllers\StageController@processAction');
 
     $visitedStages = app()->request()->get('stages') ?? null;
     $currentAction = app()->request()->get('action') ?? null;
