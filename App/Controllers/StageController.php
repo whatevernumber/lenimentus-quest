@@ -4,7 +4,7 @@ namespace App\Controllers;
 
 use App\Classes\Stage;
 use Leaf\Controller;
-use App\services\Neo4jService;
+use App\Services\Neo4jService;
 
 class StageController extends Controller
 {

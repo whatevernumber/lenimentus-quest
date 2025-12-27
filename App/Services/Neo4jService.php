@@ -2,8 +2,8 @@
 
 namespace App\Services;
 
-use App\db\DBClient;
-use App\db\Neo4jClient;
+use App\DB\DBClient;
+use App\DB\Neo4jClient;
 
 class Neo4jService implements QuestDatabaseInterface
 {
